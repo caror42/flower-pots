@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <canvas id="myCanvas" width="400" height="400"></canvas>
+</body>
+<script> "use strict"
+    window.onload = function () {
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext('2d');
+        var pot1 = {
+            x: canvas.width * 3 / 9,
+            y: canvas.height - 30,
+            width: 20,
+            height: 30,
+            distortion: 30,
+            fillColor: "#63481E",
+            strokeColor: "black",
+            velocity_x: .5,
+            velocity_y: 5,
+            left_pad: 80,
+            right_pad: canvas.width * 2 / 5,
+            flowers: []
+        };
+        var pot2 = {
+            x: canvas.width * 7 / 9,
+            y: canvas.height - 50,
+            width: 30,
+            height: 50,
+            distortion: 20,
+            fillColor: "#874F0D",
+            strokeColor: "black",
+            velocity_x: -.3,
+            velocity_y: 3,
+            left_pad: canvas.width * 3 / 5,
+            right_pad: canvas.width - 50,
+            flowers: []
+        };
+        var flower1 = {
+            angle_offset: 0,
+            angle_speed: Math.PI / 300,
+            stem_length: 100,
+            stem_width: 3,
+            stem_color: "#18560d",
+            radius: 7,
+            center_color: "#ed71af",
+            petals: []
+        };
+        var flower2 = {
+            angle_offset: 0,
+            angle_speed: Math.PI / 330,
+            stem_length: 80,
+            stem_width: 5,
+            stem_color: "#5bc049",
+            radius: 6,
+            center_color: "#1a4789",
+            petals: []
+        };
+        var flower3 = {
+            angle_offset: 0,
+            angle_speed: Math.PI / 350,
+            stem_length: 56,
+            stem_width: 3,
+            stem_color: "green",
+            radius: 9,
+            center_color: "#632ace",
+            petals: []
+        };
+        var petal1 = {
+            dist: 15,
+            radius: 9,
+            angle_offset: 0,
+            angle_speed: Math.PI / 230,
+            color: "pink",
+            line_color: "#f19edf"
+        };
+        var petal2 = {
+            dist: 12,
+            radius: 7,
+            angle_offset: 0,
+            angle_speed: Math.PI / 1000,
+            color: "#67dedb",
+            line_color: "#2babc5"
+        };
+        var petal3 = {
+            dist: 18,
+            radius: 10,
+            angle_offset: 0,
+            angle_speed: -Math.PI / 530,
+            color: "#c381ee",
+            line_color: "#812ace"
+        };
+        flower1.petals = [petal1, petal1, petal1, petal1, petal1];
+        flower2.petals = [petal2, petal2, petal2, petal2, petal2, petal2, petal2];
+        flower3.petals = [petal3, petal3, petal3, petal3, petal3, petal3]
+        pot1.flowers = [flower3, flower1, flower2];
+        pot2.flowers = [flower2, flower1, flower3, flower2]
+        var pots = [pot1, pot2];
+        requestAnimationFrame(mainLoop);
+        //Game Loop
+        function mainLoop() {
+            draw();
+            update();
+            requestAnimationFrame(mainLoop);
+        }
+        function draw() {
+            //clear our drawing
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.save();
+
+            for (let i = 0; i < pots.length; i++) {
+                let pot = pots[i];
+                context.fillStyle = pot.fillColor;
+                context.strokeStyle = pot.strokeColor;
+                context.translate(pot.x, pot.y);
+                makePot(pot);
+
+                context.translate(0, -pot.height);
+                for (let j = 0; j < pot.flowers.length; j++) {
+                    makeFlower(pot, j);
+                }
+
+                context.restore();
+                context.save();
+
+            }
+            context.restore();
+
+        }
+        function update() {
+            for (let i = 0; i < pots.length; i++) {
+                let pot = pots[i];
+                pot.x = pot.x + pot.velocity_x;
+                pot.y = pot.y + pot.velocity_y;
+                if (pot.x > pot.right_pad) {
+                    pot.velocity_x = -pot.velocity_x;
+                }
+                if (pot.x < pot.left_pad) {
+                    pot.velocity_x = -pot.velocity_x;
+                }
+                if (pot.y > canvas.height - pot.height) {
+                    pot.velocity_y = -pot.velocity_y;
+                }
+                if (pot.y < (canvas.height * 2 / 3)) {
+                    pot.velocity_y = - pot.velocity_y;
+                }
+                for (let j = 0; j < pot.flowers.length; j++) {
+                    let flower = pot.flowers[j];
+                    flower.angle_offset = flower.angle_offset + flower.angle_speed;
+                    if (flower.angle_offset > Math.PI / 7) {
+                        flower.angle_speed = -flower.angle_speed;
+                    }
+                    if (flower.angle_offset < -Math.PI / 7) {
+                        flower.angle_speed = -flower.angle_speed;
+                    }
+                    for (let k = 0; k < flower.petals.length; k++) {
+                        let petal = flower.petals[k];
+                        petal.angle_offset = petal.angle_offset + petal.angle_speed;
+
+                    }
+                }
+            }
+        }
+        function makePot(pot) {
+            context.beginPath();
+            context.moveTo((pot.width) + pot.distortion, -pot.height);
+            context.lineTo(-pot.width - pot.distortion, -pot.height);
+            context.lineTo(-pot.width, pot.height);
+            context.lineTo(pot.width, pot.height);
+            context.closePath();
+            context.lineWidth = 4;
+            context.fill();
+            context.stroke();
+        }
+        function makeFlower(pot, num) {
+            let flower = pot.flowers[num]
+            let angle = flower.angle_offset + (Math.PI * (num + 1) / (pot.flowers.length + 1));
+            let yey = -(flower.stem_length * Math.sin(angle));
+            let xey = (flower.stem_length * Math.cos(angle))
+            context.lineWidth = flower.stem_width;
+            context.strokeStyle = flower.stem_color;
+            context.beginPath();
+            context.save();
+            context.moveTo(0, 0);
+            context.lineTo(xey, yey);
+            context.closePath();
+            context.fill();
+            context.stroke();
+            context.save();
+            context.translate(xey, yey);
+            makeCenter(flower);
+            context.restore();
+            context.restore();
+
+        }
+        function makeCenter(flower) {
+
+            context.beginPath();
+            context.arc(0, 0, flower.radius, 0, 2 * Math.PI, false);
+            context.fillStyle = flower.center_color;
+            context.fill();
+            context.closePath();
+            for (let k = 0; k < flower.petals.length; k++) {
+                let petal = flower.petals[k];
+                let ang = 2 * Math.PI * k / flower.petals.length + petal.angle_offset
+                context.beginPath();
+                context.arc(petal.dist * Math.cos(ang), petal.dist * Math.sin(ang), petal.radius, ang - Math.PI * .7, ang + Math.PI * .7);
+                context.fillStyle = petal.color;
+                context.strokeStyle = petal.line_color;
+                context.fill();
+                context.stroke();
+            }
+        }
+        function makePetal() { }
+    };
+</script>
+
+<head>
+    <meta name="description" content="Flower Animation">
+    <meta charset="utf-8">
+    <title>My Flowers</title>
+</head>
+
+</html>
